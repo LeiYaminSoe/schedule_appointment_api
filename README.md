@@ -5,6 +5,7 @@
 2.	If Allocated date_time from API show as "2021-04-11 11:39:45 +0900", I consider as start_datetime "2021-04-11 11:00:00 +0900" from end_datetime "2021-04-11 12:00:00 +0900"
 3.	I mainly focus on student time_zone so I change date_time according to student.
 4.  I have the structure with api/v1 for version control of API and service layer for API call. I might need to add API secret key etc if requirement change.
+5.  I add rack_attack to limit API request throttling(May be useful in future.)
 
 *Design
 
@@ -35,6 +36,16 @@ DB => postgresql
 *How to Run Test Cases
 
 bundle exec rspec spec/requests/api/v1/schedule_appointments_spec.rb
+
+*How to Test API request Throttling
+
+In config/initializers/rack_attack.rb file, 
+
+add comment '#' in front of "throttle('req/ip', :limit => 10000, :period => 24.hours) do |req|"
+
+remove comment "#" in front of "throttle('req/ip', :limit => 2, :period => 24.hours) do |req|"
+
+By this way, you can only call twice per day to third party API(CF_calendar)
 
 *How to Test from website url after running <b>rails server</b>
 
