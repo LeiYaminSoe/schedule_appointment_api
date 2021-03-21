@@ -69,6 +69,14 @@ RSpec.describe "ScheduleAppointment", :type => :request do
     expect(json['message']).to eq("This time slot is already allocated. Please choose other time slot.")
   end
 
+  it 'book_appointment for already available slot with middle time' do
+    schedule_appointment = create(:schedule_appointment)
+    get '/api/v1/schedule_appointment/book_appointment?desired_date_time=2021-03-25 17:33:15&reason=For Another Session'
+    json = JSON.parse(response.body)
+
+    expect(json['message']).to eq("This time slot is already allocated. Please choose other time slot.")
+  end
+
   it 'book_appointment with bad param' do
     schedule_appointment = create(:schedule_appointment)
     get '/api/v1/schedule_appointment/book_appointment?desired_date_time=2021-025 170:00&reason=For Another Session'

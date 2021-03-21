@@ -22,22 +22,23 @@ class Api::V1::ScheduleAppointmentController < ApplicationController
     @confirmed_appointment = Hash.new
     if params[:desired_date_time].present? && params[:reason].present?
       desired_date_time = params[:desired_date_time].to_s + " +0900"
-      @schedule_appointments = ScheduleAppointment.where(:schedule_datetime => desired_date_time)
-      if @schedule_appointments.present?
-        if @schedule_appointments.first.is_allocated == 1
-          render json: { status: 204, message: 'This time slot is already allocated. Please choose other time slot.' } and return
-        else
-          @schedule_appointments.first.is_allocated = 1
-          @schedule_appointments.first.schedule_reason = params[:reason]
-          if @schedule_appointments.first.save
-            @confirmed_appointment["date"] = @schedule_appointments.first.schedule_datetime.split(" ")[0]
-            @confirmed_appointment["time"] = @schedule_appointments.first.schedule_datetime.split(" ")[1]
-            @confirmed_appointment["reason"] = @schedule_appointments.first.schedule_reason
-            render json: @confirmed_appointment and return
+      if valid_date?(desired_date_time)
+        desired_date_time = DateTime.strptime(desired_date_time, '%Y-%m-%d %H:%M:%S %z').change({min: 0, sec: 0}).to_time.to_s
+        @schedule_appointments = ScheduleAppointment.where(:schedule_datetime => desired_date_time)
+        if @schedule_appointments.present?
+          if @schedule_appointments.first.is_allocated == 1
+            render json: { status: 204, message: 'This time slot is already allocated. Please choose other time slot.' } and return
+          else
+            @schedule_appointments.first.is_allocated = 1
+            @schedule_appointments.first.schedule_reason = params[:reason]
+            if @schedule_appointments.first.save
+              @confirmed_appointment["date"] = @schedule_appointments.first.schedule_datetime.split(" ")[0]
+              @confirmed_appointment["time"] = @schedule_appointments.first.schedule_datetime.split(" ")[1]
+              @confirmed_appointment["reason"] = @schedule_appointments.first.schedule_reason
+              render json: @confirmed_appointment and return
+            end
           end
-        end
-      else
-        if valid_date?(desired_date_time)
+        else
           @schedule_appointment = ScheduleAppointment.new(:schedule_datetime => desired_date_time, :is_allocated => 1, :schedule_reason => params[:reason])
           @schedule_appointment.student = Student.all.first
           @schedule_appointment.mentor = Mentor.all.first
